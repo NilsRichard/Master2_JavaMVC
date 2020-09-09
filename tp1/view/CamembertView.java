@@ -6,17 +6,9 @@ import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.LayoutManager;
-import java.awt.List;
-import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -25,7 +17,6 @@ import java.awt.font.LineBreakMeasurer;
 import java.awt.font.TextLayout;
 import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.text.AttributedCharacterIterator;
@@ -34,15 +25,7 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import controller.ICamembertController;
 import model.CamembertModel;
@@ -104,6 +87,8 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 		arcs = new ArrayList<Arc2D>();
 		selectedArcs = new ArrayList<Arc2D>();
+
+		addMouseListener(this);
 
 		setSize(600, 600);
 
@@ -190,16 +175,22 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	// select the next piece of pie
 	public void nextPie() {
-		controller.setSelectedPie((controller.getSelectedPie() + 1) % model.size());
-		System.out.println("Selected pie" + controller.getSelectedPie());
+		int pie = (controller.getSelectedPie() + 1) % model.size();
+		if (pie < 0)
+			pie = -pie;
+		controller.setSelectedPie(pie);
+		System.out.println("Selected pie : " + controller.getSelectedPie());
 		paint(getGraphics());
 
 	}
 
 	// select the previous piece of pie
 	public void previousPie() {
-		controller.setSelectedPie((controller.getSelectedPie() - 1) % model.size());
-		System.out.println("Selected pie" + controller.getSelectedPie());
+		int pie = (controller.getSelectedPie() - 1) % model.size();
+		if (pie < 0)
+			pie = model.size() - 1;
+		controller.setSelectedPie(pie);
+		System.out.println("Selected pie : " + controller.getSelectedPie());
 
 		paint(getGraphics());
 	}
@@ -208,7 +199,7 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 	public void selectPie(int i) {
 		controller.setSelected(true);
 		controller.setSelectedPie(i);
-		System.out.println("Selected pie" + i);
+		System.out.println("Selected pie : " + i);
 		paint(getGraphics());
 	}
 
@@ -571,33 +562,30 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 
 		if (center.contains(arg0.getX(), arg0.getY())) {
-			controller.deSelect();
+			deSelect();
 		} else {
 
 			for (int i = 0; i < arcs.size(); i++) {
 				if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
-					controller.selectPie(i);
+					selectPie(i);
 				}
 			}
 		}
 
 		if (previous.contains(arg0.getX(), arg0.getY())) {
-			controller.nextPie();
+			nextPie();
 		}
 
 		if (next.contains(arg0.getX(), arg0.getY())) {
-			controller.previousPie();
+			previousPie();
 		}
 
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -608,7 +596,6 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	@Override
 	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 		prevPosX = arg0.getX();
 		prevPosY = arg0.getY();
 
@@ -616,15 +603,12 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
 	// if the user drags a pie we rotate it by a given angle 'angle1'
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		// TODO Auto-generated method stub
-
 		// difference in x from center:
 		double dx = pieCenter.getX() - e.getX();
 		double dy = pieCenter.getY() - e.getY();
@@ -644,13 +628,10 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void update(Observable arg0, Object arg1) {
-		// TODO Auto-generated method stub
 
 		buildGraphics();
 		paint(getGraphics());

@@ -2,7 +2,6 @@ package controller;
 
 import java.awt.Component;
 
-
 public interface ICamembertController {
 
 	void setSelected(boolean b);
@@ -13,14 +12,8 @@ public interface ICamembertController {
 
 	boolean isSelected();
 
-	void deSelect();
-
-	void selectPie(int i);
-
-	void nextPie();
-
-	void previousPie();
-
 	Component getView();
-    
+
+	void updateTitle(String newTitle);
+
 }

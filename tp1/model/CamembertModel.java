@@ -1,12 +1,10 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 
 import data.Item;
-import view.CamembertView;
 
 public class CamembertModel extends Observable implements ICamembertModel {
 
@@ -16,16 +14,19 @@ public class CamembertModel extends Observable implements ICamembertModel {
 
     @Override
     public void updateTitle(String newTitle) {
+        notifyObservers();
         this.title = newTitle;
     }
 
     @Override
     public void addItem(Item newItem) {
+        notifyObservers();
         this.items.add(newItem);
     }
 
     @Override
     public void removeItem(Item item) {
+        notifyObservers();
         this.items.remove(item);
     }
 
@@ -78,5 +79,7 @@ public class CamembertModel extends Observable implements ICamembertModel {
         this.unit = unit;
         this.items = items;
     }
+
+
 
 }

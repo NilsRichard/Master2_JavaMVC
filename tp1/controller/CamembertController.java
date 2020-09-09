@@ -2,6 +2,7 @@ package controller;
 
 import java.awt.Component;
 
+import model.ICamembertModel;
 import view.CamembertView;
 import view.ICamembertView;
 
@@ -11,11 +12,16 @@ import view.ICamembertView;
 public class CamembertController implements ICamembertController {
 
     private ICamembertView view;
+    private ICamembertModel model;
 
     private boolean selected;
+    private int selectedPie;
 
-    public CamembertController(ICamembertView view) {
+    public CamembertController(ICamembertView view, ICamembertModel model) {
         this.view = view;
+        this.model = model;
+        this.selected = false;
+        this.selectedPie = 0;
     }
 
     @Override
@@ -25,14 +31,12 @@ public class CamembertController implements ICamembertController {
 
     @Override
     public int getSelectedPie() {
-        // TODO Auto-generated method stub
-        return 0;
+        return this.selectedPie;
     }
 
     @Override
     public void setSelectedPie(int i) {
-        // TODO Auto-generated method stub
-
+        this.selectedPie = i;
     }
 
     @Override
@@ -41,32 +45,13 @@ public class CamembertController implements ICamembertController {
     }
 
     @Override
-    public void deSelect() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void selectPie(int i) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void nextPie() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void previousPie() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public Component getView() {
         return ((CamembertView) this.view);
+    }
+
+    @Override
+    public void updateTitle(String newTitle) {
+        this.model.updateTitle(newTitle);
     }
 
 }

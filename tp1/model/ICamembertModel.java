@@ -1,10 +1,8 @@
 package model;
 
 import java.util.List;
-import java.util.Observable;
 
 import data.Item;
-import view.CamembertView;
 
 public interface ICamembertModel {
 
