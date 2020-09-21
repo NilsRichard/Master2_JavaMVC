@@ -83,12 +83,13 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 		startingAngle = 0.0;
 
 		// reminder: we don't want the model to have an oberserver: use an adapter
-		((CamembertModel) model).addObserver(this);
+		// ((CamembertModel) model).addObserver(this);
 
 		arcs = new ArrayList<Arc2D>();
 		selectedArcs = new ArrayList<Arc2D>();
 
 		addMouseListener(this);
+		addMouseMotionListener(this);
 
 		setSize(600, 600);
 
@@ -563,35 +564,44 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 
-		if (center.contains(arg0.getX(), arg0.getY())) {
-			deSelect();
-		} else {
-
-			for (int i = 0; i < arcs.size(); i++) {
-				if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
-					selectPie(i);
-				}
+		// if (center.contains(arg0.getX(), arg0.getY())) {
+		// // On est dans le centre
+		// } else {
+		boolean onDeselectPosition = true;
+		for (int i = 0; i < arcs.size(); i++) {
+			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
+				selectPie(i);
+				onDeselectPosition = false;
 			}
 		}
 
+		// }
+
 		if (previous.contains(arg0.getX(), arg0.getY())) {
 			nextPie();
+			onDeselectPosition = false;
 		}
 
 		if (next.contains(arg0.getX(), arg0.getY())) {
 			previousPie();
+			onDeselectPosition = false;
 		}
+
+		if (onDeselectPosition)
+			deSelect();
 
 	}
 
+	boolean mousePressed = false;
+
 	@Override
 	public void mouseEntered(MouseEvent arg0) {
+		mousePressed = false;
 	}
 
 	@Override
 	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
+		mousePressed = false;
 	}
 
 	@Override
@@ -599,11 +609,21 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 		prevPosX = arg0.getX();
 		prevPosY = arg0.getY();
 
+		boolean onArc = false;
+		for (int i = 0; i < arcs.size(); i++) {
+			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
+				onArc = true;
+			}
+		}
+		if (onArc)
+			mousePressed = true;
+
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
-
+		mousePressed = false;
+		mouseDragged(arg0);
 	}
 
 	// if the user drags a pie we rotate it by a given angle 'angle1'
@@ -628,6 +648,9 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		if (mousePressed)
+			mouseDragged(e);
+
 	}
 
 	@Override
