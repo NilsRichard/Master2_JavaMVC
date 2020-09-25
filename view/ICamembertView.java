@@ -4,8 +4,16 @@ import controller.ICamembertController;
 
 /**
  * ICamembertView
+ * 
+ * @author Dorian Bouillet
+ * @author Nils Richard
  */
 public interface ICamembertView {
 
-    public void setController(ICamembertController controller);
+	/**
+	 * Set the controller to this view
+	 * 
+	 * @param controller the controller to set
+	 */
+	public void setController(ICamembertController controller);
 }

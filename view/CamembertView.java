@@ -28,10 +28,14 @@ import java.util.Observer;
 import javax.swing.JComponent;
 
 import controller.ICamembertController;
-import model.CamembertModel;
 import model.ICamembertModel;
 
-// this should actually implement an ICamembertView
+/**
+ * CamembertView
+ * 
+ * @author Dorian Bouillet
+ * @author Nils Richard
+ */
 public class CamembertView extends JComponent implements MouseListener, MouseMotionListener, Observer, ICamembertView {
 
 	private static final long serialVersionUID = -3890581956506829542L;
@@ -78,6 +82,13 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 	Font fontCenter;
 	Font fontTags;
 
+	boolean mousePressed = false;
+
+	/**
+	 * Constructor
+	 * 
+	 * @param m the model linked to the view
+	 */
 	public CamembertView(ICamembertModel m) {
 		model = m;
 		startingAngle = 0.0;
@@ -97,7 +108,9 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	}
 
-	// build the Arc2D (the pieces of pie)
+	/**
+	 * Build the Arc2D (the pieces of pie)
+	 */
 	public void buildGraphics() {
 
 		// create previous button
@@ -164,17 +177,142 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	}
 
-	public void setController(ICamembertController c) {
-		controller = c;
+	/**
+	 * Compute rotation
+	 * 
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 */
+	public void computeRotation(int x, int y) {
+		double dx = pieCenter.getX() - x;
+		double dy = pieCenter.getY() - y;
+		double angle1 = Math.atan2(dy, dx) / Math.PI * 180;
+
+		dx = pieCenter.getX() - prevPosX;
+		dy = pieCenter.getY() - prevPosY;
+		double angle2 = Math.atan2(dy, dx) / Math.PI * 180;
+
+		startingAngle += (angle2 - angle1);
+
+		prevPosX = x;
+		prevPosY = y;
 	}
 
-	// deselect all pieces
+	/**
+	 * Deselect all pieces
+	 */
 	public void deSelect() {
 		controller.setSelected(false);
 		paint(getGraphics());
 	}
 
-	// select the next piece of pie
+	/**
+	 * Draw the previous and next buttons
+	 */
+	private void drawPreviousNextButtons(Graphics2D g2d) {
+
+		g2d.setColor(Color.RED);
+		g2d.fill(previous);
+		g2d.fill(next);
+
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+
+		// if (center.contains(arg0.getX(), arg0.getY())) {
+		// // On est dans le centre
+		// } else {
+		boolean onDeselectPosition = true;
+		for (int i = 0; i < arcs.size(); i++) {
+			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
+				selectPie(i);
+				onDeselectPosition = false;
+			}
+		}
+
+		// }
+
+		if (previous.contains(arg0.getX(), arg0.getY())) {
+			nextPie();
+			onDeselectPosition = false;
+		}
+
+		if (next.contains(arg0.getX(), arg0.getY())) {
+			previousPie();
+			onDeselectPosition = false;
+		}
+
+		if (onDeselectPosition)
+			deSelect();
+
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		// if the user drags a pie we rotate it by a given angle 'angle1'
+
+		// difference in x from center:
+		double dx = pieCenter.getX() - e.getX();
+		double dy = pieCenter.getY() - e.getY();
+		double angle1 = Math.atan2(dy, dx) / Math.PI * 180;
+
+		dx = pieCenter.getX() - prevPosX;
+		dy = pieCenter.getY() - prevPosY;
+		double angle2 = Math.atan2(dy, dx) / Math.PI * 180;
+
+		startingAngle += (angle2 - angle1);
+
+		prevPosX = e.getX();
+		prevPosY = e.getY();
+
+		repaint();
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		mousePressed = false;
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		mousePressed = false;
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		if (mousePressed)
+			mouseDragged(e);
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		prevPosX = arg0.getX();
+		prevPosY = arg0.getY();
+
+		boolean onArc = false;
+		for (int i = 0; i < arcs.size(); i++) {
+			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
+				onArc = true;
+			}
+		}
+		if (onArc)
+			mousePressed = true;
+
+	}
+
+	// if the user clicks on a pie, it gets selected, otherwise you deselect all.
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		mousePressed = false;
+		mouseDragged(arg0);
+	}
+
+	/**
+	 * Select the next piece of pie
+	 */
 	public void nextPie() {
 		int pie = (controller.getSelectedPie() + 1) % model.size();
 		if (pie < 0)
@@ -185,43 +323,9 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	}
 
-	// select the previous piece of pie
-	public void previousPie() {
-		int pie = (controller.getSelectedPie() - 1) % model.size();
-		if (pie < 0)
-			pie = model.size() - 1;
-		controller.setSelectedPie(pie);
-		System.out.println("Selected pie : " + controller.getSelectedPie());
-
-		paint(getGraphics());
-	}
-
-	// select a piece of pie
-	public void selectPie(int i) {
-		controller.setSelected(true);
-		controller.setSelectedPie(i);
-		System.out.println("Selected pie : " + i);
-		paint(getGraphics());
-	}
-
-	private void drawPreviousNextButtons(Graphics2D g2d) {
-
-		g2d.setColor(Color.RED);
-		g2d.fill(previous);
-		g2d.fill(next);
-
-	}
-
-	public double positionXOnCircle(double radius, double angle) {
-
-		return radius * Math.cos(angle * Math.PI / 180.0);
-	}
-
-	public double positionYOnCircle(double radius, double angle) {
-		return radius * Math.sin(angle * Math.PI / 180.0);
-	}
-
-	// How to draw the Pie Chart. called everytime a refresh is performed by the UI
+	/**
+	 * How to draw the Pie Chart. Called everytime a refresh is performed by the UI
+	 */
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
@@ -544,113 +648,61 @@ public class CamembertView extends JComponent implements MouseListener, MouseMot
 
 	}
 
-	public void computeRotation(int x, int y) {
-		double dx = pieCenter.getX() - x;
-		double dy = pieCenter.getY() - y;
-		double angle1 = Math.atan2(dy, dx) / Math.PI * 180;
+	/**
+	 * Get the X position on circle
+	 * 
+	 * @param radius the radius
+	 * @param angle  the angled
+	 * @return the X position on circle
+	 */
+	public double positionXOnCircle(double radius, double angle) {
 
-		dx = pieCenter.getX() - prevPosX;
-		dy = pieCenter.getY() - prevPosY;
-		double angle2 = Math.atan2(dy, dx) / Math.PI * 180;
-
-		startingAngle += (angle2 - angle1);
-
-		prevPosX = x;
-		prevPosY = y;
+		return radius * Math.cos(angle * Math.PI / 180.0);
 	}
 
-	// if the user clicks on a pie, it gets selected, otherwise you deselect all.
-
-	@Override
-	public void mouseClicked(MouseEvent arg0) {
-
-		// if (center.contains(arg0.getX(), arg0.getY())) {
-		// // On est dans le centre
-		// } else {
-		boolean onDeselectPosition = true;
-		for (int i = 0; i < arcs.size(); i++) {
-			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
-				selectPie(i);
-				onDeselectPosition = false;
-			}
-		}
-
-		// }
-
-		if (previous.contains(arg0.getX(), arg0.getY())) {
-			nextPie();
-			onDeselectPosition = false;
-		}
-
-		if (next.contains(arg0.getX(), arg0.getY())) {
-			previousPie();
-			onDeselectPosition = false;
-		}
-
-		if (onDeselectPosition)
-			deSelect();
-
+	/**
+	 * Get the Y position on circle
+	 * 
+	 * @param radius the radius
+	 * @param angle  the angled
+	 * @return the Y position on circle
+	 */
+	public double positionYOnCircle(double radius, double angle) {
+		return radius * Math.sin(angle * Math.PI / 180.0);
 	}
 
-	boolean mousePressed = false;
+	/**
+	 * Select the previous piece of pie
+	 */
+	public void previousPie() {
+		int pie = (controller.getSelectedPie() - 1) % model.size();
+		if (pie < 0)
+			pie = model.size() - 1;
+		controller.setSelectedPie(pie);
+		System.out.println("Selected pie : " + controller.getSelectedPie());
 
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		mousePressed = false;
+		paint(getGraphics());
 	}
 
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-		mousePressed = false;
+	/**
+	 * Select a piece of pie
+	 * 
+	 * @param i the number of the piece to select
+	 */
+	public void selectPie(int i) {
+		controller.setSelected(true);
+		controller.setSelectedPie(i);
+		System.out.println("Selected pie : " + i);
+		paint(getGraphics());
 	}
 
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-		prevPosX = arg0.getX();
-		prevPosY = arg0.getY();
-
-		boolean onArc = false;
-		for (int i = 0; i < arcs.size(); i++) {
-			if (arcs.get(i).contains(arg0.getX(), arg0.getY()) && !emptyCenter.contains(arg0.getX(), arg0.getY())) {
-				onArc = true;
-			}
-		}
-		if (onArc)
-			mousePressed = true;
-
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		mousePressed = false;
-		mouseDragged(arg0);
-	}
-
-	// if the user drags a pie we rotate it by a given angle 'angle1'
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		// difference in x from center:
-		double dx = pieCenter.getX() - e.getX();
-		double dy = pieCenter.getY() - e.getY();
-		double angle1 = Math.atan2(dy, dx) / Math.PI * 180;
-
-		dx = pieCenter.getX() - prevPosX;
-		dy = pieCenter.getY() - prevPosY;
-		double angle2 = Math.atan2(dy, dx) / Math.PI * 180;
-
-		startingAngle += (angle2 - angle1);
-
-		prevPosX = e.getX();
-		prevPosY = e.getY();
-
-		repaint();
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		if (mousePressed)
-			mouseDragged(e);
-
+	/**
+	 * Set the controller
+	 * 
+	 * @param c the controller to set
+	 */
+	public void setController(ICamembertController c) {
+		controller = c;
 	}
 
 	@Override
