@@ -1,3 +1,3 @@
-# Tps de GLI Master 2 IL
+# Tp de GLI Master2 IL MVC Camembert
 
-## Auteur Nils Richard & Dorian Bouillet
+## Auteurs Nils Richard & Dorian Bouillet
